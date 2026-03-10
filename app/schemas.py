@@ -12,5 +12,6 @@ class PlayerCreate(PlayerBase):
 class Player(PlayerBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
