@@ -30,3 +30,14 @@ def get_player(player_id: int, db: Session = Depends(get_db)):
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
     return player
+
+@app.get("/players/by-name/{name}", response_model=list[schemas.Player])
+def get_player_by_name(name: str, db: Session = Depends(get_db)):
+    players = (
+        db.query(models.Player)
+        .filter(models.Player.name.ilike(name))
+        .all()
+    )
+    if not players:
+        raise HTTPException(status_code=404, detail="No players found with that name")
+    return players
