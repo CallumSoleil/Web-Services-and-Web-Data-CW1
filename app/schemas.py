@@ -15,3 +15,21 @@ class Player(PlayerBase):
     model_config = {
         "from_attributes": True
     }
+
+class PerformanceBase(BaseModel):
+    goals: int
+    assists: int
+    minutes: int
+    xg: float
+    xa: float
+
+class PerformanceCreate(PerformanceBase):
+    player_id: int
+
+class Performance(PerformanceBase):
+    id: int
+    player_id: int
+
+    model_config = {
+        "from_attributes": True
+    }
