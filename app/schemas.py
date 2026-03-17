@@ -1,35 +1,92 @@
 from pydantic import BaseModel
+from datetime import date
+
+
+# ============================
+# TEAM SCHEMAS
+# ============================
+
+class TeamBase(BaseModel):
+    name: str
+    league: str | None = None
+
+
+class TeamCreate(TeamBase):
+    pass
+
+
+class Team(TeamBase):
+    id: int
+
+    model_config = {"from_attributes": True}
+
+
+
+# ============================
+# PLAYER SCHEMAS
+# ============================
 
 class PlayerBase(BaseModel):
     name: str
     age: int
     position: str
-    club: str
+    team_id: int
+
 
 class PlayerCreate(PlayerBase):
     pass
 
+
 class Player(PlayerBase):
     id: int
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
+
+
+
+# ============================
+# MATCH SCHEMAS
+# ============================
+
+class MatchBase(BaseModel):
+    date: date
+    home_team_id: int
+    away_team_id: int
+    home_goals: int
+    away_goals: int
+    competition: str | None = None
+
+
+class MatchCreate(MatchBase):
+    pass
+
+
+class Match(MatchBase):
+    id: int
+
+    model_config = {"from_attributes": True}
+
+
+
+# ============================
+# PERFORMANCE SCHEMAS
+# ============================
 
 class PerformanceBase(BaseModel):
+    player_id: int
+    match_id: int
+    minutes: int
     goals: int
     assists: int
-    minutes: int
     xg: float
     xa: float
 
+
 class PerformanceCreate(PerformanceBase):
-    player_id: int
+    pass
+
 
 class Performance(PerformanceBase):
     id: int
-    player_id: int
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
