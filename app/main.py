@@ -7,6 +7,18 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {
+        "message": "Football Analytics API is running",
+        "endpoints": {
+            "teams": "/teams",
+            "players": "/players",
+            "matches": "/matches",
+            "performances": "/performances",
+            "docs": "/docs"
+        }
+    }
 
 # ============================
 # TEAM ENDPOINTS
