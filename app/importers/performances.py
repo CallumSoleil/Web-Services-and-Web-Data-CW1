@@ -45,18 +45,13 @@ def run():
     path = "app/data/match_reports.jsonl"
 
     with open(path, "r", encoding="utf-8") as f:
-        matches=0
         for line in f:
             row = json.loads(line)
-            count=0
-            matches+=1
 
-            # Your structure: match_report contains player_stats
             if "match_report" not in row:
                 continue
 
             report = row["match_report"]
-
             if "player_stats" not in report:
                 continue
 
@@ -82,7 +77,6 @@ def run():
                 print(f"Team not found in DB: {home_name} / {away_name}")
                 continue
 
-            # Find the match
             match = db.query(Match).filter(
                 Match.date == date,
                 Match.home_team_id == home_team.id,
@@ -100,13 +94,12 @@ def run():
                 for p in players:
                     raw_name = p["Player"]
 
-                    # Skip summary rows like "15 Players", "16 Players"
+                    # Skip summary rows like "15 Players"
                     if "players" in raw_name.lower():
                         continue
 
                     player_name = norm(raw_name)
 
-                    # Case-insensitive lookup
                     player = db.query(Player).filter(
                         func.lower(Player.name) == player_name
                     ).first()
@@ -115,36 +108,47 @@ def run():
                         print(f"Player not found: {raw_name}")
                         continue
 
-                    # Avoid duplicates
+                    # Skip if already imported
                     existing = db.query(Performance).filter(
                         Performance.match_id == match.id,
                         Performance.player_id == player.id
                     ).first()
 
-                    if p.get("Min", 0) == 0:
+                    if existing:
                         continue
 
-                    if existing:
+                    # Skip players with 0 minutes
+                    if p.get("Min", 0) == 0:
                         continue
 
                     perf = Performance(
                         match_id=match.id,
                         player_id=player.id,
+
                         minutes=p.get("Min", 0),
+
                         goals=p.get("Performance_Gls", 0),
                         assists=p.get("Performance_Ast", 0),
-                        xg=p.get("Performance_xG", 0.0) or 0.0,
-                        xa=p.get("Performance_xA", 0.0) or 0.0,
+
+                        shots=p.get("Performance_Sh", 0),
+                        shots_on_target=p.get("Performance_SoT", 0),
+                        crosses=p.get("Performance_Crs", 0),
+                        offsides=p.get("Performance_Off", 0),
+
+                        tackles_won=p.get("Performance_TklW", 0),
+                        interceptions=p.get("Performance_Int", 0),
+
+                        fouls=p.get("Performance_Fls", 0),
+                        fouled=p.get("Performance_Fld", 0),
+
+                        yellow_cards=p.get("Performance_CrdY", 0),
+                        red_cards=p.get("Performance_CrdR", 0),
                     )
-                    count+=1
 
                     db.add(perf)
-            print(count)
-        print(matches)
 
     db.commit()
     db.close()
-
 
 if __name__ == "__main__":
     run()
