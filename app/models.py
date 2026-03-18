@@ -48,19 +48,33 @@ class Match(Base):
     away_team = relationship("Team", back_populates="away_matches", foreign_keys=[away_team_id])
     performances = relationship("Performance", back_populates="match")
 
-
 class Performance(Base):
     __tablename__ = "performances"
 
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
-    match_id = Column(Integer, ForeignKey("matches.id"))
 
-    minutes = Column(Integer)
-    goals = Column(Integer)
-    assists = Column(Integer)
-    xg = Column(Float)
-    xa = Column(Float)
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False)
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=False)
+
+    minutes = Column(Integer, default=0)
+
+    # Attacking
+    goals = Column(Integer, default=0)
+    assists = Column(Integer, default=0)
+    shots = Column(Integer, default=0)
+    shots_on_target = Column(Integer, default=0)
+    crosses = Column(Integer, default=0)
+    offsides = Column(Integer, default=0)
+
+    # Defensive
+    tackles_won = Column(Integer, default=0)
+    interceptions = Column(Integer, default=0)
+
+    # Discipline / Fouls
+    fouls = Column(Integer, default=0)
+    fouled = Column(Integer, default=0)
+    yellow_cards = Column(Integer, default=0)
+    red_cards = Column(Integer, default=0)
 
     # Relationships
     player = relationship("Player", back_populates="performances")
