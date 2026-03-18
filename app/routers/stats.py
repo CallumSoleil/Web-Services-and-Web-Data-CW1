@@ -51,8 +51,20 @@ class PlayerSeasonSummary(BaseModel):
     xa: float
 
 
-@router.get("/players/{player_id}/summary", response_model=PlayerSeasonSummary)
-def player_summary(player_id: int, db: Session = Depends(get_db)):
+@router.get("/players/{identifier}/summary", response_model=PlayerSummaryOut)
+def player_summary(identifier: str, db: Session = Depends(get_db)):
+    # Resolve identifier → player
+    if identifier.isdigit():
+        player = db.query(models.Player).filter(models.Player.id == int(identifier)).first()
+    else:
+        player = db.query(models.Player).filter(models.Player.name.ilike(identifier)).first()
+
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    player_id = player.id
+
+
     player = db.query(models.Player).filter(models.Player.id == player_id).first()
     if not player:
         raise HTTPException(404, "Player not found")
@@ -94,38 +106,54 @@ class TeamSummaryOut(BaseModel):
     xg_for: float
     xg_against: float
 
+@router.get("/teams/{identifier}/summary", response_model=TeamSummaryOut)
+def team_summary(identifier: str, db: Session = Depends(get_db)):
+    # Resolve identifier → team
+    if identifier.isdigit():
+        team = db.query(models.Team).filter(models.Team.id == int(identifier)).first()
+    else:
+        team = db.query(models.Team).filter(models.Team.name.ilike(identifier)).first()
 
-@router.get("/teams/{team_id}/summary", response_model=TeamSummaryOut)
-def team_summary(team_id: int, db: Session = Depends(get_db)):
-    team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
         raise HTTPException(404, "Team not found")
 
+    team_id = team.id
+
+    # Goals For
     gf = (
         db.query(func.sum(models.Performance.goals))
-        .join(models.Match, models.Performance.match_id == models.Match.id)
-        .filter(models.Performance.player.has(team_id=team_id))
+        .filter(models.Performance.player.has(models.Player.team_id == team_id))
         .scalar() or 0
     )
 
+    # Goals Against (corrected)
     ga = (
         db.query(func.sum(models.Performance.goals))
         .join(models.Match, models.Performance.match_id == models.Match.id)
-        .filter(models.Performance.player.has(team_id != team_id))
+        .filter(models.Performance.player.has(models.Player.team_id != team_id))
+        .filter(
+            (models.Match.home_team_id == team_id) |
+            (models.Match.away_team_id == team_id)
+        )
         .scalar() or 0
     )
 
+    # xG For
     xg_for = (
         db.query(func.sum(models.Performance.xg))
-        .join(models.Match, models.Performance.match_id == models.Match.id)
-        .filter(models.Performance.player.has(team_id=team_id))
+        .filter(models.Performance.player.has(models.Player.team_id == team_id))
         .scalar() or 0.0
     )
 
+    # xG Against (corrected)
     xg_against = (
         db.query(func.sum(models.Performance.xg))
         .join(models.Match, models.Performance.match_id == models.Match.id)
-        .filter(models.Performance.player.has(team_id != team_id))
+        .filter(models.Performance.player.has(models.Player.team_id != team_id))
+        .filter(
+            (models.Match.home_team_id == team_id) |
+            (models.Match.away_team_id == team_id)
+        )
         .scalar() or 0.0
     )
 
