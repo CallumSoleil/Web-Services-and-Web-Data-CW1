@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
 
-
 # ============================
 # TEAM SCHEMAS
 # ============================
@@ -10,16 +9,12 @@ class TeamBase(BaseModel):
     name: str
     league: str | None = None
 
-
 class TeamCreate(TeamBase):
     pass
 
-
 class Team(TeamBase):
     id: int
-
     model_config = {"from_attributes": True}
-
 
 
 # ============================
@@ -32,16 +27,12 @@ class PlayerBase(BaseModel):
     position: str
     team_id: int
 
-
 class PlayerCreate(PlayerBase):
     pass
 
-
 class Player(PlayerBase):
     id: int
-
     model_config = {"from_attributes": True}
-
 
 
 # ============================
@@ -56,16 +47,12 @@ class MatchBase(BaseModel):
     away_goals: int
     competition: str | None = None
 
-
 class MatchCreate(MatchBase):
     pass
 
-
 class Match(MatchBase):
     id: int
-
     model_config = {"from_attributes": True}
-
 
 
 # ============================
@@ -78,15 +65,20 @@ class PerformanceBase(BaseModel):
     minutes: int
     goals: int
     assists: int
-    xg: float
-    xa: float
-
+    shots: int
+    shots_on_target: int
+    crosses: int
+    offsides: int
+    tackles_won: int
+    interceptions: int
+    fouls: int
+    fouled: int
+    yellow_cards: int
+    red_cards: int
 
 class PerformanceCreate(PerformanceBase):
     pass
 
-
 class Performance(PerformanceBase):
     id: int
-
     model_config = {"from_attributes": True}
