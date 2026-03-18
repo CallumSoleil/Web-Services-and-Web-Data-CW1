@@ -51,7 +51,7 @@ class PlayerSeasonSummary(BaseModel):
     xa: float
 
 
-@router.get("/players/{identifier}/summary", response_model=PlayerSummaryOut)
+@router.get("/players/{identifier}/summary", response_model=PlayerSeasonSummary)
 def player_summary(identifier: str, db: Session = Depends(get_db)):
     # Resolve identifier → player
     if identifier.isdigit():
