@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app import models, schemas
+
 # ============================
 # PLAYER ENDPOINTS
 # ============================
 
 router = APIRouter(prefix="/players", tags=["Players"])
+
 
 @router.post("/", response_model=schemas.Player)
 def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
@@ -14,7 +17,7 @@ def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
     Creates a new player and assigns them to an existing team.
 
     Parameters:
-    - player (PlayerCreate): Player data including name and team_id.
+    - player (PlayerCreate): Player data including name, age, position, and team_id.
     - db (Session): Database session.
 
     Returns:
@@ -24,6 +27,8 @@ def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
     POST /players
     {
         "name": "Bukayo Saka",
+        "age": 22,
+        "position": "RW",
         "team_id": 1
     }
 
@@ -31,11 +36,11 @@ def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
     {
         "id": 12,
         "name": "Bukayo Saka",
+        "age": 22,
+        "position": "RW",
         "team_id": 1
     }
     """
-
-    # Ensure team exists
     team = db.query(models.Team).filter(models.Team.id == player.team_id).first()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -63,11 +68,10 @@ def get_players(db: Session = Depends(get_db)):
 
     Example Response:
     [
-        {"id": 1, "name": "Erling Haaland", "team_id": 3},
-        {"id": 2, "name": "Kevin De Bruyne", "team_id": 3}
+        {"id": 1, "name": "Erling Haaland", "age": 24, "position": "ST", "team_id": 3},
+        {"id": 2, "name": "Kevin De Bruyne", "age": 32, "position": "CM", "team_id": 3}
     ]
     """
-
     return db.query(models.Player).all()
 
 
@@ -90,10 +94,11 @@ def get_player(player_id: int, db: Session = Depends(get_db)):
     {
         "id": 5,
         "name": "Martin Ødegaard",
+        "age": 25,
+        "position": "CAM",
         "team_id": 1
     }
     """
-
     player = db.query(models.Player).filter(models.Player.id == player_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
@@ -117,10 +122,82 @@ def get_players_by_name(name: str, db: Session = Depends(get_db)):
 
     Example Response:
     [
-        {"id": 7, "name": "Harry Kane", "team_id": 2}
+        {"id": 7, "name": "Harry Kane", "age": 31, "position": "ST", "team_id": 2}
     ]
     """
+    return (
+        db.query(models.Player)
+        .filter(models.Player.name.ilike(f"%{name}%"))
+        .all()
+    )
 
-    return db.query(models.Player).filter(models.Player.name.ilike(f"%{name}%")).all()
+
+@router.put("/{player_id}")
+def update_player(
+    player_id: int,
+    updated: schemas.PlayerCreate,
+    db: Session = Depends(get_db),
+):
+    """
+    Updates an existing player's information in the database.
+
+    Parameters:
+    - player_id (int): The unique ID of the player to update.
+    - updated (PlayerCreate): New player data including name, age, position, and team_id.
+    - db (Session): Database session.
+
+    Returns:
+    - message (str): Confirmation that the player was updated.
+
+    Example Request:
+    PUT /players/5
+    {
+        "name": "Bukayo Saka",
+        "age": 22,
+        "position": "RW",
+        "team_id": 1
+    }
+
+    Example Response:
+    {
+        "message": "Player updated successfully"
+    }
+    """
+    player = db.query(models.Player).filter(models.Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    for key, value in updated.model_dump().items():
+        setattr(player, key, value)
+
+    db.commit()
+    return {"message": "Player updated successfully"}
 
 
+@router.delete("/{player_id}")
+def delete_player(player_id: int, db: Session = Depends(get_db)):
+    """
+    Deletes a player from the database.
+
+    Parameters:
+    - player_id (int): Unique ID of the player to delete.
+    - db (Session): Database session.
+
+    Returns:
+    - message (str): Confirmation that the player was deleted.
+
+    Example Request:
+    DELETE /players/5
+
+    Example Response:
+    {
+        "message": "Player deleted successfully"
+    }
+    """
+    player = db.query(models.Player).filter(models.Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    db.delete(player)
+    db.commit()
+    return {"message": "Player deleted successfully"}
