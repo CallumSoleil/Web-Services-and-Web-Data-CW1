@@ -48,6 +48,29 @@ def resolve_player(identifier: str, db: Session):
 # ------------------------------------------------------------
 @router.get("/players/{identifier}/form")
 def get_player_form(identifier: str, matches: int = 5, db: Session = Depends(get_db)):
+
+    """
+    Computes a player's recent form score based on weighted performance metrics.
+
+    Parameters:
+    - identifier (str): Player ID or player name.
+    - matches (int): Number of recent performances to include.
+    - db (Session): Database session.
+
+    Returns:
+    - player: Player name.
+    - form_score: Weighted form score based on goals, assists, shots, and discipline.
+
+    Example Request:
+    GET /analytics/players/Saka/form?matches=5
+
+    Example Response:
+    {
+        "player": "Bukayo Saka",
+        "form_score": 7.85
+    }
+    """
+
     player = resolve_player(identifier, db)
 
     performances = (
@@ -98,6 +121,29 @@ def get_player_form(identifier: str, matches: int = 5, db: Session = Depends(get
 # ------------------------------------------------------------
 @router.get("/teams/{identifier}/form")
 def get_team_form(identifier: str, matches: int = 5, db: Session = Depends(get_db)):
+
+    """
+    Calculates a team's recent form score using weighted match results.
+
+    Parameters:
+    - identifier (str): Team ID or team name.
+    - matches (int): Number of recent matches to include.
+    - db (Session): Database session.
+
+    Returns:
+    - team: Team name.
+    - form_score: Weighted form score based on points and goal difference.
+
+    Example Request:
+    GET /analytics/teams/Arsenal/form?matches=5
+
+    Example Response:
+    {
+        "team": "Arsenal",
+        "form_score": 1.42
+    }
+    """
+
     team = resolve_team(identifier, db)
 
     team_matches = (
@@ -147,10 +193,40 @@ def get_team_form(identifier: str, matches: int = 5, db: Session = Depends(get_d
 # MATCH PREDICTION ENDPOINT
 # ------------------------------------------------------------
 
-
-
 @router.get("/predict")
 def predict_match(home_team: str, away_team: str, db: Session = Depends(get_db)):
+    """
+    Predicts the outcome of a match between two teams using recent form,
+    head-to-head results, and a three-way probability model.
+
+    Parameters:
+    - home_team (str): Home team ID or name.
+    - away_team (str): Away team ID or name.
+    - db (Session): Database session.
+
+    Returns:
+    - home_team: Name of the home team.
+    - away_team: Name of the away team.
+    - home_win_probability: Probability of a home win.
+    - draw_probability: Probability of a draw.
+    - away_win_probability: Probability of an away win.
+    - predicted_scoreline: Expected scoreline based on goal trends.
+
+    Example Request:
+    GET /analytics/predict?home_team=Arsenal&away_team=Chelsea
+
+    Example Response:
+    {
+        "home_team": "Arsenal",
+        "away_team": "Chelsea",
+        "home_win_probability": 0.58,
+        "draw_probability": 0.24,
+        "away_win_probability": 0.18,
+        "predicted_scoreline": "2-1"
+    }
+    """
+
+
     home = resolve_team(home_team, db)
     away = resolve_team(away_team, db)
 

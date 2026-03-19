@@ -21,6 +21,27 @@ class TopScorerOut(BaseModel):
 
 @router.get("/top-scorers", response_model=list[TopScorerOut])
 def top_scorers(limit: int = 10, db: Session = Depends(get_db)):
+    """
+    Returns the top goal scorers in the league based on total goals.
+
+    Parameters:
+    - limit (int): Maximum number of players to return.
+    - db (Session): Database session.
+
+    Returns:
+    - player_id: Unique ID of the player.
+    - player_name: Player's name.
+    - goals: Total goals scored across all performances.
+
+    Example Request:
+    GET /stats/top-scorers?limit=2
+
+    Example Response:
+    [
+        {"player_id": 1, "player_name": "Erling Haaland", "goals": 28},
+        {"player_id": 7, "player_name": "Mohamed Salah", "goals": 21}
+    ]
+    """
     rows = (
         db.query(
             models.Player.id.label("player_id"),
@@ -54,6 +75,41 @@ class PlayerSeasonSummary(BaseModel):
 
 @router.get("/players/{identifier}/summary", response_model=PlayerSeasonSummary)
 def player_summary(identifier: str, db: Session = Depends(get_db)):
+    """
+    Returns a player's aggregated season statistics across all matches.
+
+    Parameters:
+    - identifier (str): Player ID or name.
+    - db (Session): Database session.
+
+    Returns:
+    - player_id: Unique player identifier.
+    - name: Player name.
+    - appearances: Number of matches played.
+    - minutes: Total minutes played.
+    - goals: Total goals scored.
+    - assists: Total assists.
+    - shots: Total shots taken.
+    - tackles: Total tackles won.
+    - crosses: Total crosses attempted.
+
+    Example Request:
+    GET /stats/players/Saka/summary
+
+    Example Response:
+    {
+        "player_id": 12,
+        "name": "Bukayo Saka",
+        "appearances": 32,
+        "minutes": 2650,
+        "goals": 14,
+        "assists": 9,
+        "shots": 55,
+        "tackles": 28,
+        "crosses": 42
+    }
+    """
+
 
     # Resolve identifier → player
     if identifier.isdigit():
@@ -108,6 +164,36 @@ class TeamSummaryOut(BaseModel):
 
 @router.get("/teams/{identifier}/summary", response_model=TeamSummaryOut)
 def team_summary(identifier: str, db: Session = Depends(get_db)):
+
+    """
+    Returns aggregated season statistics for a team, including goals and shots.
+
+    Parameters:
+    - identifier (str): Team ID or team name.
+    - db (Session): Database session.
+
+    Returns:
+    - team_id: Unique team identifier.
+    - team_name: Team name.
+    - goals_for: Total goals scored by the team.
+    - goals_against: Total goals conceded.
+    - shots_for: Total shots taken by the team.
+    - shots_against: Total shots conceded.
+
+    Example Request:
+    GET /stats/teams/Arsenal/summary
+
+    Example Response:
+    {
+        "team_id": 1,
+        "team_name": "Arsenal",
+        "goals_for": 68,
+        "goals_against": 32,
+        "shots_for": 410,
+        "shots_against": 295
+    }
+    """
+
 
     # Resolve identifier → team
     if identifier.isdigit():
@@ -169,7 +255,7 @@ def team_summary(identifier: str, db: Session = Depends(get_db)):
 
 
 # ============================================================
-# MATCH ANALYTICS (NO xG/xA)
+# MATCH ANALYTICS
 # ============================================================
 
 class MatchAnalytics(BaseModel):
@@ -186,6 +272,43 @@ class MatchAnalytics(BaseModel):
 
 @router.get("/matches/{match_id}/analytics", response_model=MatchAnalytics)
 def match_analytics(match_id: int, db: Session = Depends(get_db)):
+
+    """
+    Returns detailed analytics for a specific match, including goals, shots,
+    and tackles for both teams.
+
+    Parameters:
+    - match_id (int): Unique match identifier.
+    - db (Session): Database session.
+
+    Returns:
+    - match_id: Match identifier.
+    - home_team: Name of the home team.
+    - away_team: Name of the away team.
+    - home_goals: Goals scored by the home team.
+    - away_goals: Goals scored by the away team.
+    - home_shots: Total shots by the home team.
+    - away_shots: Total shots by the away team.
+    - home_tackles: Tackles won by the home team.
+    - away_tackles: Tackles won by the away team.
+
+    Example Request:
+    GET /stats/matches/42/analytics
+
+    Example Response:
+    {
+        "match_id": 42,
+        "home_team": "Arsenal",
+        "away_team": "Liverpool",
+        "home_goals": 2,
+        "away_goals": 2,
+        "home_shots": 14,
+        "away_shots": 11,
+        "home_tackles": 19,
+        "away_tackles": 17
+    }
+    """
+
 
     match = db.query(models.Match).filter(models.Match.id == match_id).first()
     if not match:
