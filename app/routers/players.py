@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models, schemas
+from app.auth import verify_credentials
 
 # ============================
 # PLAYER ENDPOINTS
@@ -11,7 +12,7 @@ from app import models, schemas
 router = APIRouter(prefix="/players", tags=["Players"])
 
 
-@router.post("/", response_model=schemas.Player)
+@router.post("/", response_model=schemas.Player, dependencies=[Depends(verify_credentials)])
 def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
     """
     Creates a new player and assigns them to an existing team.
@@ -132,7 +133,7 @@ def get_players_by_name(name: str, db: Session = Depends(get_db)):
     )
 
 
-@router.put("/{player_id}")
+@router.put("/{player_id}", dependencies=[Depends(verify_credentials)])
 def update_player(
     player_id: int,
     updated: schemas.PlayerCreate,
@@ -174,7 +175,7 @@ def update_player(
     return {"message": "Player updated successfully"}
 
 
-@router.delete("/{player_id}")
+@router.delete("/{player_id}", dependencies=[Depends(verify_credentials)])
 def delete_player(player_id: int, db: Session = Depends(get_db)):
     """
     Deletes a player from the database.

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
+from app.auth import verify_credentials
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
@@ -9,7 +10,7 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
 # TEAM ENDPOINTS
 # ============================
 
-@router.post("/", response_model=schemas.Team)
+@router.post("/", response_model=schemas.Team, dependencies=[Depends(verify_credentials)])
 def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db)):
     """
     Creates a new team and stores it in the database.

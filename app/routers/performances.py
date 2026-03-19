@@ -4,9 +4,10 @@ from app.database import get_db
 from app import models, schemas
 
 router = APIRouter(prefix="/performances", tags=["Performances"])
+from app.auth import verify_credentials
 
 
-@router.post("/", response_model=schemas.Performance)
+@router.post("/", response_model=schemas.Performance, dependencies=[Depends(verify_credentials)])
 def create_performance(perf: schemas.PerformanceCreate, db: Session = Depends(get_db)):
     """
     Creates a new performance record for a player in a specific match.

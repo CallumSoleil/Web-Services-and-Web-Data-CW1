@@ -4,12 +4,13 @@ from app.database import get_db
 from app import models, schemas
 
 router = APIRouter(prefix="/matches", tags=["Matches"])
+from app.auth import verify_credentials
 
 # ============================
 # MATCH ENDPOINTS
 # ============================
 
-@router.post("/", response_model=schemas.Match)
+@router.post("/", response_model=schemas.Match, dependencies=[Depends(verify_credentials)])
 def create_match(match: schemas.MatchCreate, db: Session = Depends(get_db)):
     """
     Creates a new match between two teams.
