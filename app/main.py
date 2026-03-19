@@ -35,7 +35,6 @@ def root():
             "performances": "/performances",
             "stats": "/stats",
             "analytics": "/analytics",
-            "docs": "/docs"
         }
 
     }
