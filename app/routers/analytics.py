@@ -239,16 +239,28 @@ def predict_match(home_team: str, away_team: str, db: Session = Depends(get_db))
     h2h_norm = (h2h_score / (3 * len(h2h_matches))) if h2h_matches else 0
 
     import math
-    # ---- PROBABILITIES ----
+    # ---- PROBABILITIES----
+
+    # Base ratings
     Rh = home_form_adj + 0.2 * h2h_norm
     Ra = away_form - 0.2 * h2h_norm
 
+    # Draw rating depends on closeness of teams
+    beta = 1.0     # base draw tendency
+    gamma = 1.25    # how much draws drop when teams differ
+
+    Rd = beta - gamma * abs(Rh - Ra)
+
+    # Softmax
     exp_h = math.exp(Rh)
+    exp_d = math.exp(Rd)
     exp_a = math.exp(Ra)
 
-    home_prob = exp_h / (exp_h + exp_a)
-    away_prob = exp_a / (exp_h + exp_a)
-    draw_prob = 1 - home_prob - away_prob
+    den = exp_h + exp_d + exp_a
+
+    home_prob = exp_h / den
+    draw_prob = exp_d / den
+    away_prob = exp_a / den
 
 
     # ---- SCORELINE ----
