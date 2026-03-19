@@ -18,6 +18,14 @@ app.include_router(analytics.router)
 
 @app.get("/")
 def root():
+    """
+    Root endpoint confirming the API is running.
+
+    Returns:
+    - message: Status message.
+    - endpoints: Key route groups in the API.
+    """
+
     return {
         "message": "Football Analytics API is running",
         "endpoints": {
@@ -25,7 +33,10 @@ def root():
             "players": "/players",
             "matches": "/matches",
             "performances": "/performances",
+            "stats": "/stats",
+            "analytics": "/analytics",
             "docs": "/docs"
         }
+
     }
 
